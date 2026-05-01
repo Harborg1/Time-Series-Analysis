@@ -14,15 +14,15 @@ myKalmanFilter <- function(
   Q <- sigma1^2
   N <- length(y)
   
-  x_pred <- numeric(N)          # Predicted state mean X_t|t-1
-  P_pred <- numeric(N)          # Predicted state variance P_t|t-1
-  x_filt <- numeric(N)          # Filtered state mean X_t|t
-  P_filt <- numeric(N)          # Filtered state variance P_t|t
-  innovation <- numeric(N)      # y_t - x_pred_t
-  innovation_var <- numeric(N)  # P_pred_t + R
+  x_pred <- numeric(N)
+  P_pred <- numeric(N)
+  x_filt <- numeric(N)
+  P_filt <- numeric(N)
+  innovation <- numeric(N)
+  innovation_var <- numeric(N)
   
-  x_pred_next <- numeric(N)     # One-step-ahead predicted mean X_{t+1|t}
-  P_pred_next <- numeric(N)     # One-step-ahead predicted variance P_{t+1|t}
+  x_pred_next <- numeric(N)
+  P_pred_next <- numeric(N)
   
   for (t in seq_len(N)) {
     
@@ -113,6 +113,14 @@ pred_lower <- ci_lower[1:n]
 pred_upper <- ci_upper[1:n]
 
 
+# Choose y-axis limits
+y_min <- floor(min(c(X_t, Y_t, pred_mean, pred_lower, pred_upper), na.rm = TRUE))
+y_max <- ceiling(max(c(X_t, Y_t, pred_mean, pred_lower, pred_upper), na.rm = TRUE))
+
+# Show every integer value on the y-axis
+y_ticks <- seq(y_min, y_max, by = 1)
+
+
 # Plot
 plot(
   time,
@@ -120,8 +128,17 @@ plot(
   type = "n",
   xlab = "t",
   ylab = "Value",
-  main = "Kalman filter: X_t, Y_t, predicted X_{t+1|t}, and 95% CI",
-  ylim = range(c(X_t, Y_t, pred_mean, pred_lower, pred_upper))
+  main = "Kalman filter: Prediction and State Tracking",
+  ylim = c(y_min, y_max),
+  yaxt = "n"
+)
+
+axis(
+  side = 2,
+  at = y_ticks,
+  labels = y_ticks,
+  las = 1,
+  cex.axis = 0.8
 )
 
 polygon(
@@ -144,11 +161,15 @@ legend(
     "95% CI around X_{t+1|t}"
   ),
   col = c("red", "gray40", "blue", "skyblue"),
-  lty = c(1, NA, 2, 1),
+  lty = c(1, NA, 2, NA),
   pch = c(NA, 16, NA, 15),
-  pt.cex = c(NA, 0.8, NA, 2),
-  lwd = c(2, NA, 2, NA),
-  bty = "n"
+  pt.cex = c(NA, 0.5, NA, 1.2),
+  lwd = c(1.5, NA, 1.5, NA),
+  bty = "n",
+  cex = 0.65,
+  y.intersp = 0.8,
+  x.intersp = 0.6,
+  seg.len = 1.2
 )
 
 
@@ -169,6 +190,15 @@ pred_next <- kf$x_pred_next[1:n]
 
 residuals_pred <- true_next - pred_next
 
+
+# Choose y-axis limits for residual plot
+res_y_min <- floor(min(residuals_pred, na.rm = TRUE))
+res_y_max <- ceiling(max(residuals_pred, na.rm = TRUE))
+
+# Show every integer value on the residual y-axis
+res_y_ticks <- seq(res_y_min, res_y_max, by = 1)
+
+
 plot(
   pred_time,
   residuals_pred,
@@ -177,13 +207,29 @@ plot(
   lwd = 2,
   xlab = "t",
   ylab = "Residual",
-  main = "Residuals: True state minus predicted state"
+  main = "Residuals: True state minus predicted state",
+  ylim = c(res_y_min, res_y_max),
+  yaxt = "n"
+)
+
+axis(
+  side = 2,
+  at = res_y_ticks,
+  labels = res_y_ticks,
+  las = 1,
+  cex.axis = 0.8
 )
 
 abline(h = 0, col = "red", lty = 2)
 
-# Optional points
-points(pred_time, residuals_pred, pch = 16, cex = 0.6, col = "purple")
+points(
+  pred_time,
+  residuals_pred,
+  pch = 16,
+  cex = 0.6,
+  col = "purple"
+)
+
 
 # Optional summary
 mean(residuals_pred)
